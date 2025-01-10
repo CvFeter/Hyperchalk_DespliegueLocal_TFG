@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="{{request.LANGUAGE_CODE}}x">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Hyperchalk{% endblock title %}</title>
+  <link rel="stylesheet" href="{% static 'app.css' %}" />
+</head>
+
+<body>
+  {% if show_privacy_notice %}
+  <dialog id="privacy-statement">
+    {% include "ltiapi/privacy-statement.html" %}
+    <form method="dialog" id="privacy-statement-form">
+      <button>Accept</button>
+      <button type="button" id="privacy-statement-decline">Decline and Close Hyperchalk</button>
+    </form>
+  </dialog>
+  <script>
+    /** @type {HTMLDialogElement} */
+    if (!localStorage.getItem("readPrivacyStatement")) {
+      document.getElementById("privacy-statement").showModal()
+    }
+
+    document
+      .getElementById("privacy-statement-form")
+      .addEventListener("submit", () => localStorage.setItem("readPrivacyStatement", "true"))
+
+    document
+      .getElementById("privacy-statement-decline")
+      .addEventListener("click", window.close)
+  </script>
+  {% endif %}
+  <div id="app"></div>
+  {% csrf_token %}
+  <script>
+    // this has to be configured before excalidraw is imported.
+    // so we can't put it into the config json sadly.
+    window.EXCALIDRAW_ASSET_PATH = "{% static '/' %}"
+    production = "production"
+  </script>
+  {{excalidraw_config|json_script:'excalidraw-config'}}
+  {{initial_elements|json_script:'initial-elements'}}
+  {{files|json_script:'files'}}
+  {{custom_messages|json_script:'custom-messages'}}
+  <script src="{% static 'app.js' %}"></script>
+</body>
+
+</html>

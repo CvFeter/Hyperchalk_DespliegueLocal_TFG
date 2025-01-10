@@ -1,0 +1,208 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-06-14 14:03+0200\n"
+"PO-Revision-Date: 2022-03-02 13:03+0100\n"
+"Last-Translator: Lukas Menzel <praktikum_alice@dipf.de>\n"
+"Language-Team: EduTec <praktikum_alice@dipf.de>\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: collab/admin.py
+#, fuzzy
+#| msgid "View Room in Browser JSON Viewer"
+msgid "View Record in Browser JSON Viewer"
+msgstr "Eintrag im JSON-Betrachter des Browsers ansehen"
+
+#: collab/admin.py
+msgid "Go to JSON"
+msgstr "Zum JSON gehen"
+
+#: collab/admin.py
+msgid "will be generated after saving"
+msgstr "wird nach dem Speichern generiert"
+
+#: collab/admin.py
+msgid "shortened pseudonym"
+msgstr "Kurz-Pseuonym"
+
+#: collab/admin.py
+msgid "View Room"
+msgstr "Raum ansehen"
+
+#: collab/admin.py
+msgid "Go to room"
+msgstr "Zum Raum gehen"
+
+#: collab/admin.py
+msgid "View Room in Browser JSON Viewer"
+msgstr "Raum im JSON-Betrachter des Browsers ansehen"
+
+#: collab/admin.py
+msgid "Go to room JSON"
+msgstr "Zum Raum-JSON gehen"
+
+#: collab/admin.py
+msgid "Replay Mode"
+msgstr "Replay-Modus"
+
+#: collab/admin.py
+msgid "Replay this room"
+msgstr "Diesen Raum abspielen"
+
+#: collab/admin.py
+msgid "Discard all empty rooms (ONLY USE THIS ON TEST INSTANCES)"
+msgstr "Alle leeren Räume entfernen (NUR FÜR TESTINSTANZEN VERWENDEN)"
+
+#: collab/admin.py
+msgid "Clone room(s)"
+msgstr "Räume klonen"
+
+#: collab/admin.py
+#, python-format
+msgid "Rooms created: %s"
+msgstr "erstellte Räume: %s"
+
+#: collab/admin.py
+msgid "image"
+msgstr "Bild"
+
+#: collab/admin.py
+#, python-format
+msgid "image %s for room %s"
+msgstr "Bild %s für Raum %s"
+
+#: collab/models.py
+msgid "this is generated from draw.utils.user_id_for_room"
+msgstr "wird von draw.utils.user_id_for_room generiert"
+
+#: collab/models.py
+msgid "track users' actions"
+msgstr "Nutzer:innen-Aktionen verfolgen"
+
+#: collab/models.py collab/templates/collab/index.html
+msgid "room name"
+msgstr "Raumname"
+
+#: collab/models.py
+msgid "user"
+msgstr "Benutzer:in"
+
+#: collab/models.py
+msgid "belongs to room"
+msgstr "Zum Raum-JSON gehen"
+
+#: collab/models.py
+msgid "excalidraw meta data"
+msgstr "Excalidraw-Metadaten"
+
+#: collab/models.py
+#, python-format
+msgid "The content MIME type of %s is not allowed"
+msgstr "Der Inhalts-MIME-Typ von %s ist nicht erlaubt"
+
+#: collab/models.py
+msgid "Classroom Assignment"
+msgstr "Klassenraum-Aufgabe"
+
+#: collab/models.py
+msgid "Group Assignment"
+msgstr "Gruppenaufgabe"
+
+#: collab/models.py
+msgid "Single Student"
+msgstr "Stillarbeit"
+
+#: collab/models.py
+msgid "Single Student Assignment (legacy)"
+msgstr "Stillarbeit (alt)"
+
+#: collab/models.py
+msgid "board mode"
+msgstr "Whiteboard-Modus"
+
+#: collab/models.py
+msgid "The user can only be set if the mode is set to “single student”"
+msgstr ""
+"Der:die Benutzer:in kann nur gesetzt werden, wenn der Modus auf "
+"„Stillarbeit” gesetzt ist"
+
+#: collab/templates/collab/add_library.html
+msgid "Library Added"
+msgstr "Bibliothek hinzugefügt"
+
+#: collab/templates/collab/add_library.html
+msgid ""
+"The imported library will be added to your library once you open the drawing "
+"board tab. You can close this tab now."
+msgstr ""
+"Die importierte Bibliothek wird Deiner Bibliothek hinzugefügt, wenn Du zum "
+"Whiteboard zurückkehrst. Du kannst diesen Tab nun schließen."
+
+#: collab/templates/collab/index.html
+msgid "leave empty for a random name"
+msgstr "leer lassen für einen zufälligen Namen"
+
+#: collab/templates/collab/index.html
+msgid ""
+"The room name must have between 10 and 24 characters. The following "
+"characters are allowed: a-z, A-Z, 0-9, -, _"
+msgstr ""
+"Der Raumname muss zwischen 10 und 24 Zeichen lang sein. Folgende "
+"Zeichen sind erlaubt: a-z, A-Z, 0-9, -, _"
+
+#: collab/templates/collab/index.html
+msgid "Create room"
+msgstr "Raum erstellen"
+
+#: collab/templates/collab/index.html
+msgid "Imprint"
+msgstr "Impressum"
+
+#: collab/utils.py collab/views.py
+msgid "You need to be logged in."
+msgstr "Du musst angemeldet sein."
+
+#: collab/utils.py
+msgid "You are not allowed to access this room."
+msgstr "Du hast keinen Zugriff auf diesen Raum."
+
+#: collab/views.py
+msgid "Anonymous"
+msgstr "Anonymous"
+
+#: collab/views.py
+msgid "The file you've added is too large."
+msgstr "Die hochgeladene Datei ist zu groß."
+
+#: collab/views.py
+#, python-format
+msgid ""
+"“%s” is not a valid room name. The room name must have between 10 and 24 "
+"characters. The following characters are allowed: a-z, A-Z, 0-9, -, _"
+msgstr ""
+"„%s“ ist kein gültiger Raumname. Der Raumname muss zwischen 10 und 24 "
+"Zeichen lang sein. Folgende Zeichen sind erlaubt: a-z, A-Z, 0-9, -, _"
+
+#: collab/views.py
+#, python-format
+msgid "The room name “%(room_name)s” is already taken."
+msgstr "Der Raumname „%(room_name)s“ ist bereits vergeben."
+
+#: collab/views.py
+msgid "Automatic room creation is disabled here. CODIGO MODIFICADO LOCAL"
+msgstr "Die automatische Raum-Erstellung ist deaktiviert."
+
+#, python-format
+#~ msgid "The room “%s” already exists."
+#~ msgstr "Der Raum „%s“ existiert bereits."
