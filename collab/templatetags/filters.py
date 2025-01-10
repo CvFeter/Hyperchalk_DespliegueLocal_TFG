@@ -1,5 +1,5 @@
 from django import template
-from ..models import Pseudonym
+from collab.models import Pseudonym
 
 register = template.Library()
 

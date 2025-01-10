@@ -1,0 +1,26 @@
+{% load static %}
+{% load filters %}
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Salas</title>
+    {# Si utilizas el sistema de archivos estáticos de Django, podrías usar: 
+         <link rel="stylesheet" href="{% static 'collab/styles.css' %}"> 
+        {% comment %} <link rel="stylesheet" href="est-styles.css"> {% endcomment %}
+      o en su defecto, colocar el CSS directamente en un archivo .css que se importe aquí. #}
+
+</head>
+<body>
+    <!-- Barra de navegación -->
+    <div class="navbar">
+        <div class="logo">Salas</div>
+        <div>
+            <a href="{% url 'collab:estadisticas' %}">Estadisticas</a>
+            <a href="#">Participantes</a>
+            <!-- Agrega enlaces según tu necesidad -->
+        </div>
+    </div>
+    {% comment %} AQUI ESTA EL ERROR {% endcomment %}
+    
+</body>
+</html>

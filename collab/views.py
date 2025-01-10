@@ -168,9 +168,9 @@ async def estadisticas(request: HttpRequest):
     nLogs = await database_sync_to_async(ExcalidrawLogRecord.objects.count)()
     return render(request, 'collab/estadisticas.html', {'nRooms': nRooms, 'nUsers' : nUsers, 'nLogs' : nLogs}) #puede que sea /estadisticas dado que no está metido en templates/collab
 
-# async def salas(request: HttpRequest):
-#     rooms = await database_sync_to_async(ExcalidrawRoom.objects)()
-#     return render(request, 'collab/salas.html', {'rooms' : rooms})
+async def salas(request: HttpRequest):
+    rooms = await database_sync_to_async(ExcalidrawRoom.objects.all)()
+    return render(request, 'collab/salas.html', {'rooms' : rooms})
 
 # async def salas_stats(request: HttpRequest, room_name: str):
 #     room = async_get_object_or_404(ExcalidrawRoom, name = room_name)
