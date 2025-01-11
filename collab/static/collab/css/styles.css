@@ -104,6 +104,11 @@ body {
     background-color: #f9f9f9;
 }
 
+.centered {
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
 /* Responsividad para pantallas pequeñas */
 @media (max-width: 768px) {
     .container {
@@ -117,8 +122,3 @@ body {
 }
 
 
-/* DataTable */
-.centered {
-    text-align: center !important;
-    vertical-align: middle !important;
-}
