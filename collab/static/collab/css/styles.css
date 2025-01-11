@@ -115,3 +115,10 @@ body {
         width: 90%; /* Los box ocupan casi todo el ancho en pantallas pequeñas */
     }
 }
+
+
+/* DataTable */
+.centered {
+    text-align: center !important;
+    vertical-align: middle !important;
+}

@@ -19,6 +19,10 @@ from draw.utils.auth import Unauthenticated, require_staff_user, user_is_authent
 from . import models as m
 from .utils import get_or_create_room, room_access_check
 
+#Importaciones adicionales
+from django.http.response import JsonResponse
+from django.shortcuts import render
+
 logger = logging.getLogger('draw.collab')
 
 
@@ -169,8 +173,25 @@ async def estadisticas(request: HttpRequest):
     return render(request, 'collab/estadisticas.html', {'nRooms': nRooms, 'nUsers' : nUsers, 'nLogs' : nLogs}) #puede que sea /estadisticas dado que no está metido en templates/collab
 
 async def salas(request: HttpRequest):
-    rooms = await database_sync_to_async(ExcalidrawRoom.objects.all)()
-    return render(request, 'collab/salas.html', {'rooms' : rooms})
+    return render(request, 'collab/salas.html')
+
+
+@database_sync_to_async
+def get_rooms():
+    return list(ExcalidrawRoom.objects.values('room_name', 'created_at', 'last_update'))
+
+async def list_salas(request):
+    rooms = await get_rooms()
+    return JsonResponse({'rooms': rooms})
+
+
+# async def list_salas(request: HttpRequest):
+#     rooms = await list(ExcalidrawRoom.objects.values())
+#     data = {'rooms' : rooms}
+#     #return render(request, 'collab/salas.html', {'rooms' : rooms})
+#     return JsonResponse(data)
+    # rooms = await database_sync_to_async(ExcalidrawRoom.objects.all)()
+    
 
 # async def salas_stats(request: HttpRequest, room_name: str):
 #     room = async_get_object_or_404(ExcalidrawRoom, name = room_name)

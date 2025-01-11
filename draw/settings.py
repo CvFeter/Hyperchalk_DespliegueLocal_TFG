@@ -178,7 +178,7 @@ STATIC_ROOT = BASE_DIR / 'static_copy'
 STATICFILES_DIRS = [
     BASE_DIR / 'client' / 'dist',
     BASE_DIR / 'draw' / 'static',
-    BASE_DIR / 'collab' / 'static',
+    #BASE_DIR / 'collab' / 'static',
 ]
 
 # Media Uploads
