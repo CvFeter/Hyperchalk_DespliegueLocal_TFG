@@ -163,8 +163,8 @@ async def replay(request: HttpRequest, room_name: str, **kwargs):
 def get_distinct_user_count():
     return Pseudonym.objects.values('user_id').distinct().count()
 
-# @require_staff_user
-async def estadisticas(request: HttpRequest):
+
+async def collab_stats(request: HttpRequest):
     # print("Vista 'estadisticas' llamada")
     nRooms = await database_sync_to_async(ExcalidrawRoom.objects.count)()
     nUsers = await database_sync_to_async(get_distinct_user_count)()
@@ -172,7 +172,7 @@ async def estadisticas(request: HttpRequest):
     nLogs = await database_sync_to_async(ExcalidrawLogRecord.objects.count)()
     return render(request, 'collab/estadisticas.html', {'nRooms': nRooms, 'nUsers' : nUsers, 'nLogs' : nLogs}) #puede que sea /estadisticas dado que no está metido en templates/collab
 
-async def salas(request: HttpRequest):
+async def rooms(request: HttpRequest):
     return render(request, 'collab/salas.html')
 
 
@@ -183,6 +183,24 @@ def get_rooms():
 async def list_salas(request):
     rooms = await get_rooms()
     return JsonResponse({'rooms': rooms})
+
+
+
+def room_stats(request: HttpRequest):
+    
+    # validate_room_name(room_name)
+    # room_obj, username = await asyncio.gather(
+    #     async_get_object_or_404(m.ExcalidrawRoom, room_name=room_name),
+    #     get_username(request.user))
+    
+    # logs = await get_logs(room_name) #logs de la sala
+    
+    # participants = await database_sync_to_async(get_users_pseudonym)(room_name) #usado para obtener los participantes de la sala
+    # nParticipants = sum(1 for p in participants if p['is_staff'])
+    # nLogs = await database_sync_to_async(ExcalidrawLogRecord.objects.filter(room_name=room_name).count)()
+
+    # return render(request, 'collab/dashboard.html', {'room': room_obj, 'nParticipants': nParticipants, 'nLogs': nLogs})
+    return render(request, 'collab/dashboard.html')
 
 
 # async def list_salas(request: HttpRequest):

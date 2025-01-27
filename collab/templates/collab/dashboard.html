@@ -1,0 +1,264 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mi Dashboard - Construcción</title>
+    <!-- Bootstrap CSS (versión 5.x) -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <!-- DataTable-->
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css"
+    />
+    <link rel="stylesheet" href="{% static 'collab/css/styles-dashboard.css' %}">
+
+  </head>
+  
+  <body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <a class="navbar-brand">Hyperchalk</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+          aria-controls="navbarNav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link active" aria-current="page" href="#">Home</a>
+              <!-- mirar el significado de active-->
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#">Rooms</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+        <!-- HEADER O TÍTULO PRINCIPAL -->
+    <header class="bg-white border-bottom p-3 mb-3">
+      <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+          <h1 class="h3 mb-0">Proyecto Alpha</h1>
+          <button class="btn btn-outline-secondary" href="#">View replay</button>
+        </div>
+      </div>
+    </header>
+
+
+    <!-- CONTENEDOR PRINCIPAL DEL DASHBOARD -->
+    <main class="container mb-4">
+      <!-- Sección de KPIs (tarjetas) -->
+      <section
+        id="tarjetas"
+        class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-3 mb-4 justify-content-center"
+      >
+        <!-- Tarjeta KPI 1 -->
+        <div class="col">
+          <div class="card text-white bg-primary h-100">
+            <div class="card-body text-center">
+              <h5 class="card-title">Particpants</h5>
+              <p class="card-text display-6">4</p>
+            </div>
+          </div>
+        </div>
+        <!-- Tarjeta KPI 2 -->
+        <div class="col">
+          <div class="card text-white bg-warning h-100">
+            <div class="card-body text-center">
+              <h5 class="card-title">Number of logs</h5>
+              <p class="card-text display-6">3500</p>
+            </div>
+          </div>
+        </div>
+        <!-- Tarjeta KPI 3 -->
+        <div class="col">
+          <div class="card text-white bg-success h-100">
+            <div class="card-body text-center">
+              <h5 class="card-title">Created elements</h5>
+              <p class="card-text display-6">15</p>
+            </div>
+          </div>
+        </div>
+        <!-- Tarjeta KPI 4 -->
+        <div class="col">
+          <div class="card text-white bg-danger h-100">
+            <div class="card-body text-center">
+              <h5 class="card-title">Time to finish</h5>
+              <p class="card-text display-6">6'35''</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Staff Table -->
+      <section class="row g-3 mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Teachers</h5>
+              <div class="table-responsive">
+                <table
+                  id="teachersTable"
+                  class="table table-striped table-hover text-center"
+                >
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Last Name</th>
+                      <th>Department</th>
+                      <th>Classes</th>
+                      <th>Students</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Datos dinámicos aquí -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Participants table -->
+      <section class="row g-3 mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Participants</h5>
+              <div class="table-responsive">
+                <table
+                  id="participantsTable"
+                  class="table table-striped table-hover text-center"
+                >
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Name</th>
+                      <th>Last Name</th>
+                      <th>Email</th>
+                      <th>Fecha de incripción</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Datos dinámicos aquí -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección del mapa y gráficos pequeños -->
+      <section id="graficas" class="row g-3 mb-4 justify-content-evenly">
+        <!-- Gráfica de barras con ECharts -->
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">Number of movements per participant</h5>
+              <div
+                id="barChartEcharts"
+                style="width: 100%; height: 300px"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pie Chart -->
+        <!-- Nightingale Chart -->
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title"> Interactions</h5>
+              <div
+                id="diagrama_interacciones"
+                style="width: 100%; height: 300px"
+              ></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Line race -->
+        <div class="col-md-6 col-lg-4 flex-grow-1">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">Rhythm of interaction by time</h5>
+              <div id="lineRaceChart" style="width: 100%; height: 300px"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Gráfica de barras comparativas -->
+      
+       <!-- HEATMAP DE INTERACCIONES -->
+      <section class="row g-3 mb-4">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Heat map by movements</h5>
+              <div id="heatmapChart" style="width: 100%; height: 400px;"></div>
+            </div>
+          </div>
+      </section>
+
+      <!-- Gráfica de flujo de caja -->
+      <!-- Tabla interactiva con DataTables -->
+      <section class="row g-3 mb-4">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">Created/Modified elements by participant</h5>
+              <div class="table-responsive">
+                <table id="elements-table" class="table dataTable">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Last Name</th>
+                      <th>Figures</th>
+                      <th>Conectors</th>
+                      <th>Draws</th>
+                      <th>Text</th>
+                      <th>Modifications number</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Se llenará dinámicamente -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section> 
+
+    </main>
+
+    <!-- Bootstrap JS (Popper incluido) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- librería graficas -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <!-- DataTable -->
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Tu script principal -->
+    <script src="{% static 'collab/js/dashboard-room.js' %}"></script>
+
+  </body>
+</html>

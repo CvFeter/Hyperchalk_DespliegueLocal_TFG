@@ -1,0 +1,187 @@
+/* styles.css */
+
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: sans-serif;
+  background-color: #f7f7f7;
+  color: #333;
+}
+
+/* Encabezado */
+header {
+  padding: 1rem;
+  background-color: #fff;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Contenedor principal */
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+/* Sección de KPIs */
+.kpi-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.kpi-card {
+  background-color: #fff;
+  padding: 1rem;
+  border-radius: 4px;
+  text-align: center;
+  color: #fff;
+}
+
+.kpi-purple {
+  background-color: #8e44ad;
+}
+.kpi-orange {
+  background-color: #e67e22;
+}
+.kpi-blue {
+  background-color: #3498db;
+}
+.kpi-cyan {
+  background-color: #1abc9c;
+}
+.kpi-yellow {
+  background-color: #f1c40f;
+  color: #000;
+}
+.kpi-green {
+  background-color: #2ecc71;
+}
+
+/* Sección del mapa y gráficas pequeñas */
+.map-charts-section {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+.map-container {
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 1rem;
+  min-height: 300px; /* Ejemplo */
+}
+
+.map-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pie-chart-container,
+.finance-container,
+.health-container {
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+/* Finanzas */
+.finance-bar {
+  margin-bottom: 0.5rem;
+}
+.finance-label {
+  display: inline-block;
+  width: 150px;
+}
+
+/* Health container */
+.health-row {
+  display: flex;
+  align-items: center;
+  margin: 0.5rem 0;
+}
+.health-indicator {
+  width: 10px;
+  height: 10px;
+  margin-left: 8px;
+  border-radius: 50%;
+  border: 1px solid #999;
+}
+.red {
+  background-color: red;
+}
+.orange {
+  background-color: orange;
+}
+.green {
+  background-color: green;
+}
+
+/* Tabla de proyectos */
+.projects-table-section {
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+.projects-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.projects-table th,
+.projects-table td {
+  padding: 0.5rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.health-badge {
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.8rem;
+}
+.health-badge.red {
+  background: red;
+}
+.health-badge.green {
+  background: green;
+}
+.health-badge.amber {
+  background: orange;
+} /* ejemplo */
+
+/* Barras de progreso de pago */
+.payment-bar {
+  background: #3498db;
+  color: #fff;
+  text-align: center;
+  border-radius: 4px;
+  height: 1.2rem;
+  max-width: 200px; /* ajusta según tu diseño */
+}
+
+/* Sección de gráficas grandes (barras, cashflow, etc.) */
+.bar-chart-section,
+.cash-flow-section {
+  background-color: #fff;
+  border-radius: 4px;
+  padding: 1rem;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: #666;
+}
