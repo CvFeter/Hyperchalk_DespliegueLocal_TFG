@@ -1,61 +1,91 @@
 // script.js
 
 // Teachers table
-document.addEventListener('DOMContentLoaded', () => {
-  // Datos para la tabla Profesores
-  const teachersData = [
-    {
-      name: 'Alice',
-      lastName: 'Johnson',
-      department: 'Math',
-      classes: 5,
-      students: 120,
-    },
-    {
-      name: 'Bob',
-      lastName: 'Smith',
-      department: 'Physics',
-      classes: 3,
-      students: 90,
-    },
-    {
-      name: 'Catherine',
-      lastName: 'Davis',
-      department: 'History',
-      classes: 4,
-      students: 110,
-    },
-    // Agrega más datos aquí
-  ];
 
-  // Seleccionar el cuerpo de la tabla Profesores
-  const teachersTableBody = document.querySelector('#teachersTable tbody');
+async function fetchParticipants(roomName) {
+  try {
+      const response = await fetch(`/api/participants/${roomName}/`);
+      // Verifica si la respuesta es válida
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-  // Añadir filas dinámicamente a la tabla Profesores
-  teachersData.forEach((item) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${item.name}</td>
-      <td>${item.lastName}</td>
-      <td>${item.department}</td>
-      <td>${item.classes}</td>
-      <td>${item.students}</td>
-    `;
-    teachersTableBody.appendChild(row);
+      const data = await response.json();
+      console.log('Participants:', data.participants);
+      return data.participants;
+  } catch (error) {
+      console.error('Error fetching participants:', error);
+      return [];
+  }
+}
+
+async function initParticipantsTable(roomName) {
+  const participants = await fetchParticipants(roomName);
+  const participantsTableBody = document.querySelector('#teachersTable tbody');
+
+  // Limpiar la tabla antes de agregar nuevos datos (evita duplicados)
+  participantsTableBody.innerHTML = '';
+
+  // Añadir filas dinámicamente a la tabla
+  participants.forEach(item => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+          <td>${item.username}</td>
+          <td>${item.first_name}</td>
+          <td>${item.last_name}</td>
+          <td>${item.email}</td>
+      `;
+      participantsTableBody.appendChild(row);
   });
 
-  // Inicializar DataTables para Profesores
-  $(document).ready(function () {
-    $('#teachersTable').DataTable({
+  // Inicializar DataTables (asegurarse de que se inicializa después de agregar los datos)
+  $('#participantsTable').DataTable({
+      destroy: true,  // Para reinicializar si la tabla ya estaba activa
       columnDefs: [
-        {
-          targets: '_all',
-          className: 'dt-center',
-        },
+          { targets: '_all', className: 'dt-center' },
       ],
-    });
   });
+}
+
+// Ejecutar cuando la página cargue
+document.addEventListener('DOMContentLoaded', async () => {
+  const roomName = document.getElementById('roomName').value; // Asegúrate de que existe este campo oculto en la plantilla
+  await initParticipantsTable(roomName);
 });
+
+
+
+// document.addEventListener('DOMContentLoaded', () => {
+//   // Datos para la tabla Profesores
+
+//   // Seleccionar el cuerpo de la tabla Profesores
+//   const teachersTableBody = document.querySelector('#teachersTable tbody');
+
+  
+//   //const teachers = participants.filter(p => p.is_staff);
+//   // Añadir filas dinámicamente a la tabla Profesores
+  
+//     participants.forEach(item => {
+//       const row = document.createElement('tr');
+//       row.innerHTML = `
+//         <td>${item.username}</td>
+//         <td>${item.first_name}</td>
+//         <td>${item.last_name}</td>
+//         <td>${item.email}</td>
+//       `;
+//       teachersTableBody.appendChild(row);
+//     });
+
+//   // Inicializar DataTables para Profesores
+//   $('#teachersTable').DataTable({
+//     columnDefs: [
+//       {
+//         targets: '_all',
+//         className: 'dt-center',
+//       },
+//     ],
+//   });
+// });
 
 // Participants Table
 document.addEventListener('DOMContentLoaded', () => {
@@ -91,7 +121,6 @@ document.addEventListener('DOMContentLoaded', () => {
       <td>${item.name}</td>
       <td>${item.lastName}</td>
       <td>${item.email}</td>
-      <td>${item.date}</td>
     `;
     participantsTableBody.appendChild(row);
   });

@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import json
 from typing import Literal
 from urllib.parse import urlunsplit
 
@@ -22,6 +23,8 @@ from .utils import get_or_create_room, room_access_check
 #Importaciones adicionales
 from django.http.response import JsonResponse
 from django.shortcuts import render
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db.models import F
 
 logger = logging.getLogger('draw.collab')
 
@@ -165,10 +168,8 @@ def get_distinct_user_count():
 
 
 async def collab_stats(request: HttpRequest):
-    # print("Vista 'estadisticas' llamada")
     nRooms = await database_sync_to_async(ExcalidrawRoom.objects.count)()
     nUsers = await database_sync_to_async(get_distinct_user_count)()
-    # nUsers = await database_sync_to_async(Pseudonym.objects.count)()
     nLogs = await database_sync_to_async(ExcalidrawLogRecord.objects.count)()
     return render(request, 'collab/estadisticas.html', {'nRooms': nRooms, 'nUsers' : nUsers, 'nLogs' : nLogs}) #puede que sea /estadisticas dado que no está metido en templates/collab
 
@@ -184,23 +185,114 @@ async def list_salas(request):
     rooms = await get_rooms()
     return JsonResponse({'rooms': rooms})
 
+# @database_sync_to_async
+# def fetch_pseudonyms(room_name: str):
+#     return list(Pseudonym.objects.filter(room__room_name=room_name).values('user_id', 'pseudonym'))   
+# @database_sync_to_async
+# def fetch_custom_users(user_ids: str):
+#     return list(CustomUser.objects.filter(id__in=user_ids))
+
+# async def get_users_pseudonym(request, room_name: str):
+#     pseudonym_list = await fetch_pseudonyms(room_name)
+#     user_ids = [r['user_id'] for r in pseudonym_list]
+
+#     # 3) Obtenemos la información de los usuarios correspondientes en CustomUser.
+#     #    Asumiendo que el campo 'id' de CustomUser es el que coincide con user_id en Room.
+#     usuarios_list = await fetch_custom_users(user_ids)
+
+#     # 4) Creamos un diccionario para acceder a los usuarios por su id de forma rápida.
+#     dict_usuarios = {u.id: u for u in usuarios_list}
+
+#     # 5) Unimos (join) la información de ambas tablas en una sola lista de diccionarios.
+#     resultado = []
+#     for r in pseudonym_list:
+#         uid = r['user_id']
+#         user = dict_usuarios.get(uid)
+#         if user:
+#             resultado.append({
+#                 'user_id': str(uid),
+#                 'pseudonimo': r['pseudonimo'],
+#                 # Custom user fields
+#                 'username': user.username,
+#                 'first_name': user.first_name,
+#                 'last_name': user.last_name, 
+#                 'email': user.email,
+#                 'is_staff': user.is_staff,
+#             })
+
+#     return JsonResponse({'users': resultado}, safe=False)
 
 
-def room_stats(request: HttpRequest):
+@database_sync_to_async
+def fetch_pseudonyms_with_users(room_name: str):
+    # Realizamos una consulta manual para unir Pseudonym y CustomUser
+    pseudonyms = Pseudonym.objects.filter(room__room_name=room_name).annotate(
+        username=F('user__username'),
+        first_name=F('user__first_name'),
+        last_name=F('user__last_name'),
+        email=F('user__email'),
+        is_staff=F('user__is_staff'),
+        is_superuser=F('user__is_superuser')
+    ).values(
+        'user_id',
+        'user_pseudonym',
+        'username',
+        'first_name',
+        'last_name',
+        'email',
+        'is_staff',
+        'is_superuser'
+    ).filter(is_superuser=False)  # No mostrar superusuarios
+    return list(pseudonyms)
+
+async def get_users_pseudonym(request, room_name: str):
+    # Obtenemos la lista de pseudónimos con la información de los usuarios
+    pseudonym_list = await fetch_pseudonyms_with_users(room_name)
     
-    # validate_room_name(room_name)
-    # room_obj, username = await asyncio.gather(
-    #     async_get_object_or_404(m.ExcalidrawRoom, room_name=room_name),
-    #     get_username(request.user))
+    # Construimos el resultado directamente desde la lista serializada
+    participants = [
+        {
+            'user_id': str(p['user_id']),  # Convertir UUID a string
+            'pseudonimo': p['user_pseudonym'],
+            'username': p['username'],
+            'first_name': p['first_name'],
+            'last_name': p['last_name'],
+            'email': p['email'],
+            'is_staff': p['is_staff'],
+            'is_superuser': p['is_superuser']
+        }
+        for p in pseudonym_list
+    ]
+
+    return JsonResponse({'participants': participants}, safe=False)
+
+
+
+async def room_stats(request: HttpRequest, room_name: str):
+    
+    validate_room_name(room_name)
+    room_obj, username = await asyncio.gather(
+        async_get_object_or_404(m.ExcalidrawRoom, room_name=room_name),
+        get_username(request.user))
     
     # logs = await get_logs(room_name) #logs de la sala
     
-    # participants = await database_sync_to_async(get_users_pseudonym)(room_name) #usado para obtener los participantes de la sala
+    #participants = await get_users_pseudonym(request, room_name) #usado para obtener los participantes de la sala
     # nParticipants = sum(1 for p in participants if p['is_staff'])
-    # nLogs = await database_sync_to_async(ExcalidrawLogRecord.objects.filter(room_name=room_name).count)()
+    nParticipants = await database_sync_to_async(Pseudonym.objects.filter(room_id=room_name).values('user_id').distinct().count)() 
+    nLogs = await database_sync_to_async(ExcalidrawLogRecord.objects.filter(room_name=room_name).count)()
 
+    #participants_serialized = json.dumps(participants, cls=DjangoJSONEncoder)
     # return render(request, 'collab/dashboard.html', {'room': room_obj, 'nParticipants': nParticipants, 'nLogs': nLogs})
-    return render(request, 'collab/dashboard.html')
+    return render(request, 'collab/dashboard.html', 
+        {
+            'room': room_obj,
+            'nParticipants': nParticipants,
+            'nLogs': nLogs,
+            #'participants': participants.content
+            #'participants': participants_serialized
+        }
+    )
 
 
 # async def list_salas(request: HttpRequest):

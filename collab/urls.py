@@ -9,10 +9,9 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('stats/', views.collab_stats, name='collab_stats'),
     path('stats/rooms/', views.rooms, name='rooms'),
-    path('panel/', views.room_stats, name='room_stats'),
     path('list_salas/', views.list_salas, name='list_salas'), #Json
-    
-    # path('estadisticas/salas/<room_name>/', views.salas_stats, name='estadisticas_sala'),
+    path('panel/<room_name>/', views.room_stats, name='room_stats'),
+    path('api/participants/<room_name>/', views.get_users_pseudonym, name='participants'),
     path('add-library/', TemplateView.as_view(template_name='collab/add_library.html'),
          name='add-library'),
     path('<room_name>/', views.room, name='room'),
