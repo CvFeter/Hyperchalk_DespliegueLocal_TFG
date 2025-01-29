@@ -6,12 +6,12 @@ async function fetchParticipants(roomName) {
   try {
       const response = await fetch(`/api/participants/${roomName}/`);
       // Verifica si la respuesta es válida
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      // if (!response.ok) {
+      //   throw new Error(`HTTP error! status: ${response.status}`);
+      // }
 
       const data = await response.json();
-      console.log('Participants:', data.participants);
+      // console.log('Participants:', data.participants);
       return data.participants;
   } catch (error) {
       console.error('Error fetching participants:', error);
@@ -47,45 +47,6 @@ async function initParticipantsTable(roomName) {
   });
 }
 
-// Ejecutar cuando la página cargue
-document.addEventListener('DOMContentLoaded', async () => {
-  const roomName = document.getElementById('roomName').value; // Asegúrate de que existe este campo oculto en la plantilla
-  await initParticipantsTable(roomName);
-});
-
-
-
-// document.addEventListener('DOMContentLoaded', () => {
-//   // Datos para la tabla Profesores
-
-//   // Seleccionar el cuerpo de la tabla Profesores
-//   const teachersTableBody = document.querySelector('#teachersTable tbody');
-
-  
-//   //const teachers = participants.filter(p => p.is_staff);
-//   // Añadir filas dinámicamente a la tabla Profesores
-  
-//     participants.forEach(item => {
-//       const row = document.createElement('tr');
-//       row.innerHTML = `
-//         <td>${item.username}</td>
-//         <td>${item.first_name}</td>
-//         <td>${item.last_name}</td>
-//         <td>${item.email}</td>
-//       `;
-//       teachersTableBody.appendChild(row);
-//     });
-
-//   // Inicializar DataTables para Profesores
-//   $('#teachersTable').DataTable({
-//     columnDefs: [
-//       {
-//         targets: '_all',
-//         className: 'dt-center',
-//       },
-//     ],
-//   });
-// });
 
 // Participants Table
 document.addEventListener('DOMContentLoaded', () => {
@@ -138,26 +99,50 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// GRAFICA DE BARRAS CON EL Nº DE MOVIMIENTOS POR PARTICIPANTE
-document.addEventListener('DOMContentLoaded', () => {
+
+// Cargar datos elementos/logs por participante
+async function fetchElements(roomName) {
+  try {
+      const response = await fetch(`/api/elements/${roomName}/`);
+      // Verifica si la respuesta es válida
+      // if (!response.ok) {
+      //   throw new Error(`HTTP error! status: ${response.status}`);
+      // }
+
+      const data = await response.json();
+      console.log('Elements:', data.elements);
+      return data.elements;
+  } catch (error) {
+      console.error('Error fetching participants:', error);
+      return [];
+  }
+}
+
+// Grafica de barras de movimientos por participante
+async function initMovementsChart(roomName) {
+  const elements = await fetchElements(roomName);
+
+  const usernames = elements.map((item) => item.username);
+  const movements = elements.map((item) => item.movement);
+ 
   // Selecciona el contenedor de la gráfica
-  const barChartEcharts = document.getElementById('barChartEcharts');
+  const movementsChart = document.getElementById('movementsChart');
 
   // Inicializa la gráfica con ECharts
-  const chart = echarts.init(barChartEcharts);
+  const chart = echarts.init(movementsChart);
 
   // Configuración de la gráfica
   const option = {
     xAxis: {
       type: 'category',
-      data: ['User1', 'User2', 'User3', 'User4', 'User5', 'User6', 'User7'],
+      data: usernames, // Eje X con nombres de usuario
     },
     yAxis: {
       type: 'value',
     },
     series: [
       {
-        data: [120, 200, 150, 80, 70, 110, 130],
+        data: movements, // Eje Y con valores de movement
         type: 'bar',
         showBackground: true,
         backgroundStyle: {
@@ -174,19 +159,33 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('resize', () => {
     chart.resize();
   });
-});
+  
+}
+
 
 // DIAGRAMA CIRCULAR % DE INTERACCIONES
-document.addEventListener('DOMContentLoaded', () => {
-  // Contenedor de la gráfica
-  const diagrama_interacciones = document.getElementById(
-    'diagrama_interacciones'
+async function initInteractionsChart(roomName) {
+  const elements = await fetchElements(roomName);
+
+  // Calcular el total de interacciones para obtener los porcentajes
+  const totalInteractions = elements.reduce(
+    (sum, element) => sum + element.interactions,
+    0
   );
+
+  // Construir los datos para la gráfica
+  const chartData = elements.map((element) => ({
+    value: ((element.interactions / totalInteractions) * 100).toFixed(2), // Porcentaje
+    name: element.username, // Nombre del usuario
+  }));
+
+  // Selecciona el contenedor del gráfico
+  const diagrama_interacciones = document.getElementById('diagrama_interacciones');
 
   // Inicializa el gráfico con ECharts
   const myChart = echarts.init(diagrama_interacciones);
 
-  // Configuración del gráfico (Nightingale Chart)
+  // Configuración del gráfico
   const option = {
     legend: {
       top: 'bottom',
@@ -210,31 +209,28 @@ document.addEventListener('DOMContentLoaded', () => {
         itemStyle: {
           borderRadius: 8,
         },
-        data: [
-          //data: [120, 200, 150, 80, 70, 110, 130], 860 || ['User1', 'User2', 'User3', 'User4', 'User5', 'User6', 'User7'],
-          { value: (120 / 860) * 100, name: '1' },
-          { value: (200 / 860) * 100, name: '2' },
-          { value: (150 / 860) * 100, name: '3' },
-          { value: (80 / 860) * 100, name: '4' },
-          { value: (70 / 860) * 100, name: '5' },
-          { value: (110 / 860) * 100, name: '6' },
-          { value: (130 / 860) * 100, name: '7' },
-        ],
+        data: chartData, // Datos dinámicos calculados
       },
     ],
   };
 
-  // Establece la configuración y renderiza el gráfico
+  // Renderiza el gráfico
   myChart.setOption(option);
 
   // Asegura que el gráfico sea responsivo
   window.addEventListener('resize', () => {
     myChart.resize();
   });
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const roomName = document.getElementById('roomName').value; // ID del input oculto con el nombre de la sala
+  await initParticipantsTable(roomName); // Inicializar la tabla
+  await initMovementsChart(roomName);    // Inicializar la gráfica de movimientos
+  await initInteractionsChart(roomName); // Inicializar la gráfica interacciones
 });
 
 //GRAFICA LINE RACE
-
 document.addEventListener('DOMContentLoaded', () => {
   // Contenedor de la gráfica
   const chartDom = document.getElementById('lineRaceChart');

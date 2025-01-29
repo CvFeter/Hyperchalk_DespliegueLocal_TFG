@@ -24,7 +24,7 @@ from .utils import get_or_create_room, room_access_check
 from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.core.serializers.json import DjangoJSONEncoder
-from django.db.models import F
+from django.db.models import F, OuterRef, Count, Subquery
 
 logger = logging.getLogger('draw.collab')
 
@@ -185,44 +185,6 @@ async def list_salas(request):
     rooms = await get_rooms()
     return JsonResponse({'rooms': rooms})
 
-# @database_sync_to_async
-# def fetch_pseudonyms(room_name: str):
-#     return list(Pseudonym.objects.filter(room__room_name=room_name).values('user_id', 'pseudonym'))   
-# @database_sync_to_async
-# def fetch_custom_users(user_ids: str):
-#     return list(CustomUser.objects.filter(id__in=user_ids))
-
-# async def get_users_pseudonym(request, room_name: str):
-#     pseudonym_list = await fetch_pseudonyms(room_name)
-#     user_ids = [r['user_id'] for r in pseudonym_list]
-
-#     # 3) Obtenemos la información de los usuarios correspondientes en CustomUser.
-#     #    Asumiendo que el campo 'id' de CustomUser es el que coincide con user_id en Room.
-#     usuarios_list = await fetch_custom_users(user_ids)
-
-#     # 4) Creamos un diccionario para acceder a los usuarios por su id de forma rápida.
-#     dict_usuarios = {u.id: u for u in usuarios_list}
-
-#     # 5) Unimos (join) la información de ambas tablas en una sola lista de diccionarios.
-#     resultado = []
-#     for r in pseudonym_list:
-#         uid = r['user_id']
-#         user = dict_usuarios.get(uid)
-#         if user:
-#             resultado.append({
-#                 'user_id': str(uid),
-#                 'pseudonimo': r['pseudonimo'],
-#                 # Custom user fields
-#                 'username': user.username,
-#                 'first_name': user.first_name,
-#                 'last_name': user.last_name, 
-#                 'email': user.email,
-#                 'is_staff': user.is_staff,
-#             })
-
-#     return JsonResponse({'users': resultado}, safe=False)
-
-
 @database_sync_to_async
 def fetch_pseudonyms_with_users(room_name: str):
     # Realizamos una consulta manual para unir Pseudonym y CustomUser
@@ -232,7 +194,7 @@ def fetch_pseudonyms_with_users(room_name: str):
         last_name=F('user__last_name'),
         email=F('user__email'),
         is_staff=F('user__is_staff'),
-        is_superuser=F('user__is_superuser')
+        is_superuser=F('user__is_superuser'),
     ).values(
         'user_id',
         'user_pseudonym',
@@ -259,13 +221,63 @@ async def get_users_pseudonym(request, room_name: str):
             'last_name': p['last_name'],
             'email': p['email'],
             'is_staff': p['is_staff'],
-            'is_superuser': p['is_superuser']
         }
         for p in pseudonym_list
     ]
 
     return JsonResponse({'participants': participants}, safe=False)
 
+
+@database_sync_to_async
+def fetch_user_logs(room_name: str):
+    logs = Pseudonym.objects.filter(room__room_name=room_name).annotate(
+        movement=Subquery(
+            ExcalidrawLogRecord.objects.filter(
+                user_pseudonym=OuterRef('user_pseudonym'),  
+                room_name=room_name,
+                event_type='collaborator_change'
+            )
+            .values('user_pseudonym')  
+            .annotate(movement_count=Count('id'))
+            .values('movement_count')
+        ),
+        interactions=Subquery(
+            ExcalidrawLogRecord.objects.filter(
+                user_pseudonym=OuterRef('user_pseudonym'),
+                room_name=room_name
+            )
+            .values('user_pseudonym')
+            .annotate(interactions_count=Count('id'))
+            .values('interactions_count')
+        )
+    ).values(
+        'user__username',  
+        'user__first_name',  
+        'user__last_name',
+        'user__is_superuser',  
+        'movement',
+        'interactions'
+    ).filter(user__is_superuser=False)
+
+    return list(logs)
+
+async def get_elements(request, room_name: str):
+        # Obtenemos la lista de usuarios con movimientos
+        user_movements = await fetch_user_logs(room_name)
+        
+        # Construimos el JSON de respuesta
+        response_data = [
+            {
+                'username': user['user__username'],
+                'first_name': user['user__first_name'],
+                'last_name': user['user__last_name'],
+                'movement': user['movement'] if user['movement'] is not None else 0,
+                'interactions': user['interactions'] if user['interactions'] is not None else 0
+            }
+            for user in user_movements
+        ]
+
+        return JsonResponse({'elements': response_data}, safe=False)
 
 
 async def room_stats(request: HttpRequest, room_name: str):
@@ -294,15 +306,3 @@ async def room_stats(request: HttpRequest, room_name: str):
         }
     )
 
-
-# async def list_salas(request: HttpRequest):
-#     rooms = await list(ExcalidrawRoom.objects.values())
-#     data = {'rooms' : rooms}
-#     #return render(request, 'collab/salas.html', {'rooms' : rooms})
-#     return JsonResponse(data)
-    # rooms = await database_sync_to_async(ExcalidrawRoom.objects.all)()
-    
-
-# async def salas_stats(request: HttpRequest, room_name: str):
-#     room = async_get_object_or_404(ExcalidrawRoom, name = room_name)
-#     return render(request, 'collab/estadisticas_sala.html', {'room' : room})

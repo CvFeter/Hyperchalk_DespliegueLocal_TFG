@@ -12,6 +12,7 @@ urlpatterns = [
     path('list_salas/', views.list_salas, name='list_salas'), #Json
     path('panel/<room_name>/', views.room_stats, name='room_stats'),
     path('api/participants/<room_name>/', views.get_users_pseudonym, name='participants'),
+    path('api/elements/<room_name>/', views.get_elements, name='elements'),
     path('add-library/', TemplateView.as_view(template_name='collab/add_library.html'),
          name='add-library'),
     path('<room_name>/', views.room, name='room'),
