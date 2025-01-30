@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import json
+import requests
 from typing import Literal
 from urllib.parse import urlunsplit
 
@@ -25,6 +26,10 @@ from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db.models import F, OuterRef, Count, Subquery
+from django.utils.timezone import now, timedelta
+from django.db.models.functions import TruncMinute
+import math
+from django.test import Client
 
 logger = logging.getLogger('draw.collab')
 
@@ -280,29 +285,214 @@ async def get_elements(request, room_name: str):
         return JsonResponse({'elements': response_data}, safe=False)
 
 
+def get_time_range_for_room(room_name):
+    """
+    Calcula el rango de tiempo desde el último 'collaborator_entered' 
+    hasta el primer 'collaborator_left' en una sala específica.
+    """
+    try:
+        # Obtener el primer evento 'collaborator_change'
+        first_change_event = ExcalidrawLogRecord.objects.filter(
+            room_name=room_name,
+            event_type='collaborator_change'
+        ).order_by('created_at').first()
+
+        # Obtener el último evento 'collaborator_change'
+        last_change_event = ExcalidrawLogRecord.objects.filter(
+            room_name=room_name,
+            event_type='collaborator_change'
+        ).order_by('-created_at').first()
+
+        # Validar que existan ambos eventos
+        if not first_change_event or not last_change_event:
+            return None, None, None  # No hay rango válido
+
+        # Calcular el delta en minutos
+        delta_minutes = math.ceil(((last_change_event.created_at - first_change_event.created_at).total_seconds() / 60)+1)
+
+        return first_change_event.created_at, last_change_event.created_at, delta_minutes
+
+    except Exception as e:
+        # En caso de error, devolver valores vacíos
+        print(f"Error al calcular el rango de tiempo: {e}")
+        return None, None, None
+
+
+def get_user_movements_over_time(request, room_name):
+    """
+    Devuelve los movimientos (collaborator_change) por usuario en intervalos de tiempo.
+    """
+    try:
+        
+        start_time, end_time, delta_minutes = get_time_range_for_room(room_name)
+        
+        username_subquery = Subquery(
+            Pseudonym.objects.filter(
+                user_pseudonym=OuterRef('user_pseudonym')
+            ).values('user__username')[:1]
+        )
+
+        # Subquery para verificar si el usuario es superuser
+        is_superuser_subquery = Subquery(
+            Pseudonym.objects.filter(
+                user_pseudonym=OuterRef('user_pseudonym')
+            ).values('user__is_superuser')[:1]
+        )
+
+        # Subquery para verificar si el usuario es staff
+        is_staff_subquery = Subquery(
+            Pseudonym.objects.filter(
+                user_pseudonym=OuterRef('user_pseudonym')
+            ).values('user__is_staff')[:1]
+        )
+
+        # Filtrar los registros por sala, tipo de evento y rango de tiempo
+        logs = (
+            ExcalidrawLogRecord.objects.filter(
+                room_name=room_name,
+                event_type='collaborator_change',
+                created_at__range=(start_time, end_time),
+            )
+            .annotate(
+                username=username_subquery,
+                is_superuser=is_superuser_subquery,
+                is_staff=is_staff_subquery,
+                time_interval=TruncMinute('created_at')  # Se puede usar para agrupar por intervalos personalizados
+            )
+            .exclude(is_superuser=True)
+            #.exclude(is_staff=True)
+            .values('username', 'time_interval')  # Agrupamos por pseudónimo e intervalo
+            .annotate(movements=Count('id'))  # Contamos los movimientos
+            .order_by('time_interval')
+        )
+
+        # Formatear los datos para la gráfica
+        response_data = {}
+        for log in logs:
+            user = log['username']
+            interval = log['time_interval'].strftime('%H:%M')
+            if user not in response_data:
+                response_data[user] = {}
+            response_data[user][interval] = log['movements']
+
+        #return JsonResponse({'dataTime': response_data}, safe=False)
+        return JsonResponse({
+            'dataTime': response_data,
+            'delta_minutes': delta_minutes,   # Convertir timedelta a string para JSON
+            'start_time': start_time.strftime('%H:%M'),
+            'end_time': end_time.strftime('%H:%M')
+        }, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def get_heatmap_data(request, room_name):
+    """
+    Genera los datos para un HeatMap basado en las posiciones de los registros `collaborator_change`.
+    """
+    try:
+        # Filtrar los registros relevantes
+        logs = ExcalidrawLogRecord.objects.filter(
+            room_name=room_name,
+            event_type='collaborator_change'
+        )
+
+        # Contador de posiciones
+        position_counts = {}
+        # Iterar sobre cada registro y procesar el JSON asociado
+        for log in logs:
+            # Construir la URL del JSON asociado
+            json_url = f"/api/collab/{room_name}/records/{log.id}.json"
+            
+            try:
+                # Acceder al JSON asociado (asumiendo que está en el mismo servidor)
+                response = requests.get(json_url)
+                response.raise_for_status()  # Levanta un error si la respuesta no es 200 OK
+                data = response.json()
+
+                # Extraer las coordenadas
+                x = data.get('pointer', {}).get('x')
+                y = data.get('pointer', {}).get('y')
+
+                if x is not None and y is not None:
+                    # Contabilizar la posición
+                    position_counts[(x, y)] = position_counts.get((x, y), 0) + 1
+
+            except Exception as e:
+                print(f"Error procesando el JSON {json_url}: {e}")
+
+        # Transformar el diccionario en una lista para el HeatMap
+        heatmap_data = [
+            {'x': key[0], 'y': key[1], 'count': count}
+            for key, count in position_counts.items()
+        ]
+
+        return JsonResponse({'heatmapData': heatmap_data}, safe=False)
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+
+def test_single_json_access(request, room_name):
+    """
+    Función de prueba para acceder a un único JSON asociado al primer registro de logs.
+    """
+    try:
+        # Obtener el primer registro con event_type='collaborator_change'
+        log = ExcalidrawLogRecord.objects.filter(
+            room_name=room_name,
+            event_type='collaborator_change'
+        ).first()
+
+        if not log:
+            return JsonResponse({'error': 'No se encontraron registros'}, status=404)
+
+        # Construir la URL completa del JSON asociado
+        path = f"/api/collab/{room_name}/records/1616.json"
+        json_url = request.build_absolute_uri(path)  # Genera la URL completa (incluye http:// y dominio)
+
+        try:
+            # Acceder al JSON asociado
+            response = requests.get(json_url)
+            print(f"Respuesta del servidor: {response.status_code}")  # Depuración
+            response.raise_for_status()  # Levanta un error si la respuesta no es 200 OK
+
+            # Obtener los datos del JSON
+            data = response.json()
+            print(f"Datos obtenidos: {data}")  # Depuración
+
+            # Devolver el JSON en la respuesta
+            return JsonResponse(data, safe=False)
+
+        except requests.exceptions.HTTPError as e:
+            print(f"Error HTTP al acceder al JSON: {e}")
+            return JsonResponse({'error': f"Error HTTP: {e}"}, status=response.status_code)
+
+        except Exception as e:
+            print(f"Error procesando el JSON: {e}")
+            return JsonResponse({'error': str(e)}, status=500)
+
+    except Exception as e:
+        print(f"Error general: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
 async def room_stats(request: HttpRequest, room_name: str):
     
     validate_room_name(room_name)
     room_obj, username = await asyncio.gather(
         async_get_object_or_404(m.ExcalidrawRoom, room_name=room_name),
         get_username(request.user))
-    
-    # logs = await get_logs(room_name) #logs de la sala
-    
-    #participants = await get_users_pseudonym(request, room_name) #usado para obtener los participantes de la sala
-    # nParticipants = sum(1 for p in participants if p['is_staff'])
+
     nParticipants = await database_sync_to_async(Pseudonym.objects.filter(room_id=room_name).values('user_id').distinct().count)() 
     nLogs = await database_sync_to_async(ExcalidrawLogRecord.objects.filter(room_name=room_name).count)()
 
-    #participants_serialized = json.dumps(participants, cls=DjangoJSONEncoder)
-    # return render(request, 'collab/dashboard.html', {'room': room_obj, 'nParticipants': nParticipants, 'nLogs': nLogs})
     return render(request, 'collab/dashboard.html', 
         {
             'room': room_obj,
             'nParticipants': nParticipants,
             'nLogs': nLogs,
-            #'participants': participants.content
-            #'participants': participants_serialized
         }
     )
 

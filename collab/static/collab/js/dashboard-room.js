@@ -223,50 +223,73 @@ async function initInteractionsChart(roomName) {
   });
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const roomName = document.getElementById('roomName').value; // ID del input oculto con el nombre de la sala
-  await initParticipantsTable(roomName); // Inicializar la tabla
-  await initMovementsChart(roomName);    // Inicializar la gráfica de movimientos
-  await initInteractionsChart(roomName); // Inicializar la gráfica interacciones
-});
 
-//GRAFICA LINE RACE
-document.addEventListener('DOMContentLoaded', () => {
+
+async function fetchTimelineData(roomName) {
+  try {
+    const response = await fetch(`/api/timeline/${roomName}/`);
+    const data = await response.json();
+
+    if (!data.dataTime || !data.delta_minutes) {
+      console.error('Datos no válidos o incompletos desde la API');
+      return { dataTime: {}, deltaMinutes: 0 };
+    }
+
+    return {
+      dataTime: data.dataTime,
+      deltaMinutes: data.delta_minutes,
+      start_time: data.start_time,
+    };
+  } catch (error) {
+    console.error('Error fetching timeline data:', error);
+    return { dataTime: {}, deltaMinutes: 0 };
+  }
+}
+
+async function initTimelineChart(roomName) {
+  const { dataTime, deltaMinutes, start_time } = await fetchTimelineData(roomName);
+
+  if (deltaMinutes === 0) {
+    console.error('No se pudo generar la gráfica debido a datos insuficientes.');
+    return;
+  }
+
   // Contenedor de la gráfica
   const chartDom = document.getElementById('lineRaceChart');
   const myChart = echarts.init(chartDom);
 
-  // Datos ficticios
-  const times = Array.from({ length: 60 }, (_, i) => `${i + 1} min`); // 60 minutos
-  const countries = ['Equipo A', 'Equipo B', 'Equipo C', 'Equipo D'];
-  const data = countries.map((team) => {
+  // Generar etiquetas de tiempo
+  //const times = Array.from({ length: deltaMinutes }, (_, i) => `${i + 1} min`);
+  const [startHour, startMinute] = start_time.split(':').map((v) => parseInt(v, 10));
+  const times = Array.from({ length: deltaMinutes }, (_, i) => {
+    const totalMinutes = startHour * 60 + startMinute + i;
+    const currentHour = Math.floor(totalMinutes / 60);
+    const currentMinute = totalMinutes % 60;
+    return `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
+  });
+
+
+  // Construir las series para la gráfica
+  const users = Object.keys(dataTime);
+  const seriesList = users.map((username) => {
+    const userData = dataTime[username];
+    const formattedData = times.map((time) => [time, userData[time] || 0]); // 0 si no hay datos
+
     return {
-      name: team,
-      data: Array.from(
-        { length: 60 },
-        () => Math.floor(Math.random() * 100) + 0
-      ), // Ritmo aleatorio entre 50 y 150
+      type: 'line',
+      name: username,
+      showSymbol: false,
+      smooth: true,
+      emphasis: {
+        focus: 'series',
+      },
+      data: formattedData,
     };
   });
 
   // Configuración de la gráfica
-  const seriesList = data.map((team) => ({
-    type: 'line',
-    name: team.name,
-    showSymbol: false,
-    smooth: true,
-    emphasis: {
-      focus: 'series',
-    },
-    encode: {
-      x: 'Time',
-      y: 'Interaction Rate',
-    },
-    data: team.data.map((y, i) => [times[i], y]), // Mapear tiempo y valores
-  }));
-
   const option = {
-    animationDuration: 10000, // Duración de la animación
+    animationDuration: 10000,
     title: {
       text: 'Rhythm of interaction by time',
       left: 'center',
@@ -277,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
     xAxis: {
       type: 'category',
       name: 'Time (min)',
-      data: times, // Tiempo (1-60 minutos)
+      data: times, // Tiempo (minutos)
       boundaryGap: false,
     },
     yAxis: {
@@ -299,8 +322,20 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('resize', () => {
     myChart.resize();
   });
+
+  // Mostrar el delta en la consola
+  console.log(`Duración total (delta): ${deltaMinutes} minutos`);
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  const roomName = document.getElementById('roomName').value; // ID del input oculto con el nombre de la sala
+  await initParticipantsTable(roomName); // Inicializar la tabla
+  await initMovementsChart(roomName);    // Inicializar la gráfica de movimientos
+  await initInteractionsChart(roomName); // Inicializar la gráfica interacciones
+  await initTimelineChart(roomName);     // Inicializar la gráfica de tiempo
 });
 
+//HEATMAP
 document.addEventListener('DOMContentLoaded', () => {
   const chartDom = document.getElementById('heatmapChart');
   const myChart = echarts.init(chartDom);
